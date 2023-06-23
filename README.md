@@ -3,7 +3,7 @@
 
 ## Setting up the project
 
-First create an virtual environment to install all the python packages
+First, create an virtual environment to install all the python packages in the root directory of the project.
 
 On Windows:
 

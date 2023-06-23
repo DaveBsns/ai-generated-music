@@ -1,1 +1,5 @@
-magenta==2.1.4
+tensorflow
+protobuf==3.20.3
+numba
+magenta
+note-seq
