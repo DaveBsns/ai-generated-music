@@ -25,7 +25,7 @@ def parse_midi_notes(response_text):
     
     return notes
 
-api_key = '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'
+api_key = ''
 openai.api_key = api_key
 model_id = 'gpt-3.5-turbo'
 
@@ -73,9 +73,9 @@ chatGPTSong.tempos.add(qpm=60)
 
 # Initialize the model.
 print("Initializing Melody RNN...")
-bundle = sequence_generator_bundle.read_bundle_file('melody_rnn_bundles/attention_rnn.mag')
+bundle = sequence_generator_bundle.read_bundle_file('./google_magenta/melody_rnn_bundles/attention_rnn.mag')
 generator_map = melody_rnn_sequence_generator.get_generator_map()
-melody_rnn = generator_map['basic_rnn'](checkpoint=None, bundle=bundle)
+melody_rnn = generator_map['attention_rnn'](checkpoint=None, bundle=bundle)
 melody_rnn.initialize()
 
 print('🎉 Done!')
@@ -102,4 +102,4 @@ sequence = melody_rnn.generate(input_sequence, generator_options)
 
 
 note_seq.play_sequence(sequence, synth=note_seq.synthesize)
-note_seq.sequence_proto_to_midi_file(sequence, 'output/guitar_sample_output.midi')
+note_seq.sequence_proto_to_midi_file(sequence, './google_magenta/output/guitar_sample_output.midi')
