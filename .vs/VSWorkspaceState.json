@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\ai-generated-music",
+    "\\magenta",
+    "\\melody_rnn_bundles",
+    "\\output"
+  ],
+  "SelectedNode": "\\generate_melody.py",
+  "PreviewInSolutionExplorer": false
+}

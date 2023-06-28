@@ -4,74 +4,83 @@ from magenta.models.melody_rnn import melody_rnn_sequence_generator
 from magenta.models.shared import sequence_generator_bundle
 from note_seq.protobuf import generator_pb2
 from note_seq.protobuf import music_pb2
+import openai
 
-'''
-guitar = music_pb2.NoteSequence()
-guitar.notes.add(pitch=40, start_time=0, end_time=0.25, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=42, start_time=0.25, end_time=0.5, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=45, start_time=0.5, end_time=0.75, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=40, start_time=0.75, end_time=1, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=42, start_time=1, end_time=1.25, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=45, start_time=1.25, end_time=1.5, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=40, start_time=1.5, end_time=1.75, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=42, start_time=1.75, end_time=2, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=45, start_time=2, end_time=2.25, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=40, start_time=2.25, end_time=2.5, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=42, start_time=2.5, end_time=2.75, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=45, start_time=2.75, end_time=3, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=40, start_time=3, end_time=3.25, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=42, start_time=3.25, end_time=3.5, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=45, start_time=3.5, end_time=3.75, is_drum=False, instrument=26, velocity=80)
-guitar.notes.add(pitch=40, start_time=3.75, end_time=4, is_drum=False, instrument=26, velocity=80)
-guitar.total_time = 4
+def parse_midi_notes(response_text):
+    lines = response_text.strip().split("\n")
+    notes = []
+    
+    for line in lines:
+        note_data = line.strip().split(",")
+        
+        if len(note_data) == 5:
+            note = {
+                "pitch": int(note_data[1].strip()),
+                "start_time": float(note_data[2].strip()),
+                "end_time": float(note_data[3].strip()),
+                "velocity": int(note_data[4].strip())
+            }
+            
+            notes.append(note)
+    
+    return notes
 
-guitar.tempos.add(qpm=60)
-
-
-note_seq.play_sequence(guitar,synth=note_seq.synthesize)
+api_key = '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'
+openai.api_key = api_key
 
 
-# This creates a file called `drums_sample_output.mid`, containing the drums solo we've been using.
-note_seq.sequence_proto_to_midi_file(guitar, '../output/guitar_sample_output.mid')
-'''
+description = input("Enter the music piece description: ")
+gptprompt = f"Generate MIDI notes for a {description}.\n\nPlease provide the notes in the following structure:\n\nnew_note_starting_here_indicator,pitch,start_time,end_time,velocity\n\nFor example:\n\nn,62,0.0,0.5,80\nn,60,0.5,1.0,80\n"
+
+response = openai.ChatCompletion.create(
+    engine="gpt-3.5-turbo",
+    prompt=gptprompt,
+    max_tokens=750,  # Adjust the value as per your needs
+    n = 1,  # Set the number of responses you want
+    stop=None,  # Specify an optional stopping condition
+)
+
+print(response.choices[0].text)
+
+parsed_notes = parse_midi_notes(response.choices[0].text)
+
+chatGPTSong = music_pb2.NoteSequence()
+
+for note in parsed_notes:
+    chatGPTSong.notes.add(
+        pitch=note["pitch"],
+        start_time=note["start_time"],
+        end_time=note["end_time"],
+        velocity=note["velocity"]
+    )
+
+for note in parsed_notes:
+    pitch = note["pitch"]
+    start_time = note["start_time"]
+    end_time = note["end_time"]
+    velocity = note["velocity"]
+    
+    note_info = f"Pitch: {pitch}, Start Time: {start_time}, End Time: {end_time}, Velocity: {velocity}"
+    print(note_info)
 
 
+# Find the highest end_time value
+highest_end_time = max(note["end_time"] for note in parsed_notes)
+chatGPTSong.total_time = highest_end_time
+chatGPTSong.tempos.add(qpm=60)
 
-sweet_home_alabama = music_pb2.NoteSequence()
-
-# Add the notes to the sequence
-sweet_home_alabama.notes.add(pitch=62, start_time=0.0, end_time=0.5, velocity=80)
-sweet_home_alabama.notes.add(pitch=60, start_time=0.5, end_time=1.0, velocity=80)
-sweet_home_alabama.notes.add(pitch=57, start_time=1.0, end_time=1.5, velocity=80)
-sweet_home_alabama.notes.add(pitch=55, start_time=1.5, end_time=2.0, velocity=80)
-sweet_home_alabama.notes.add(pitch=53, start_time=2.0, end_time=2.5, velocity=80)
-sweet_home_alabama.notes.add(pitch=50, start_time=2.5, end_time=3.0, velocity=80)
-sweet_home_alabama.notes.add(pitch=48, start_time=3.0, end_time=4.0, velocity=80)
-sweet_home_alabama.notes.add(pitch=50, start_time=4.0, end_time=4.5, velocity=80)
-sweet_home_alabama.notes.add(pitch=53, start_time=4.5, end_time=5.0, velocity=80)
-sweet_home_alabama.notes.add(pitch=52, start_time=5.0, end_time=5.5, velocity=80)
-sweet_home_alabama.notes.add(pitch=48, start_time=5.5, end_time=6.0, velocity=80)
-sweet_home_alabama.notes.add(pitch=48, start_time=6.0, end_time=6.5, velocity=80)
-sweet_home_alabama.notes.add(pitch=50, start_time=6.5, end_time=7.0, velocity=80)
-sweet_home_alabama.notes.add(pitch=55, start_time=7.0, end_time=8.0, velocity=80)
-
-# Set the total time of the sequence
-sweet_home_alabama.total_time = 8
-
-# Add a tempo to the sequence
-sweet_home_alabama.tempos.add(qpm=60)
 # Initialize the model.
 print("Initializing Melody RNN...")
-bundle = sequence_generator_bundle.read_bundle_file('../melody_rnn_bundles/attention_rnn.mag')
+bundle = sequence_generator_bundle.read_bundle_file('melody_rnn_bundles/attention_rnn.mag')
 generator_map = melody_rnn_sequence_generator.get_generator_map()
 melody_rnn = generator_map['attention_rnn'](checkpoint=None, bundle=bundle)
 melody_rnn.initialize()
 
 print('🎉 Done!')
 
-input_sequence = sweet_home_alabama # change this to teapot if you want
+input_sequence = chatGPTSong # change this to teapot if you want
 num_steps = 128 # change this for shorter or longer sequences
-temperature = 1.0 # the higher the temperature the more random the sequence.
+temperature = 0.5 # the higher the temperature the more random the sequence.
 
 # Set the start time to begin on the next step after the last note ends.
 last_end_time = (max(n.end_time for n in input_sequence.notes)
@@ -90,4 +99,4 @@ generate_section = generator_options.generate_sections.add(
 sequence = melody_rnn.generate(input_sequence, generator_options)
 
 note_seq.play_sequence(sequence, synth=note_seq.synthesize)
-note_seq.sequence_proto_to_midi_file(sequence, '../output/guitar_sample_output.mid')
+note_seq.sequence_proto_to_midi_file(sequence, 'output/guitar_sample_output.midi')
