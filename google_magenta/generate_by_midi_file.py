@@ -6,11 +6,13 @@ from note_seq.protobuf import generator_pb2
 from note_seq.protobuf import music_pb2
 # Load the MIDI file
 midi_file = note_seq.midi_file_to_sequence_proto('./google_magenta/midi_input/sweet_home_alabama.mid')
-
+midi_file2 = note_seq.midi_file_to_sequence_proto('./google_magenta/midi_input/hes_a_pirate.mid')
 # Add the notes from the MIDI file to the NoteSequence
 sweet_home_alabama = music_pb2.NoteSequence()
 for note in midi_file.notes:
-    sweet_home_alabama.notes.add(pitch=note.pitch, start_time=note.start_time, end_time=note.end_time, velocity=note.velocity)
+    for note2 in midi_file2.notes:
+      sweet_home_alabama.notes.add(pitch=note.pitch, start_time=note.start_time, end_time=note.end_time, velocity=note.velocity)
+      sweet_home_alabama.notes.add(pitch=note2.pitch, start_time=note2.start_time, end_time=note2.end_time, velocity=note2.velocity)
 
 # Set the total time of the sequence
 sweet_home_alabama.total_time = max(note.end_time for note in sweet_home_alabama.notes)
@@ -19,17 +21,18 @@ print(sweet_home_alabama.total_time)
 # Add a tempo to the sequence
 sweet_home_alabama.tempos.add(qpm=midi_file.tempos[0].qpm)
 
-'''
+
 print("Initializing Melody RNN...")
-bundle = sequence_generator_bundle.read_bundle_file('./melody_rnn_bundles/basic_rnn.mag')
+bundle = sequence_generator_bundle.read_bundle_file('./google_magenta/melody_rnn_bundles/basic_rnn.mag')
 generator_map = melody_rnn_sequence_generator.get_generator_map()
 melody_rnn = generator_map['basic_rnn'](checkpoint=None, bundle=bundle)
 melody_rnn.initialize()
 
 print('🎉 Done!')
 
-input_sequence = sweet_home_alabama # change this to teapot if you want
-num_steps = 400 # change this for shorter or longer sequences
+
+input_sequence = sweet_home_alabama
+num_steps = 48000 # change this for shorter or longer sequences
 temperature = 1.0 # the higher the temperature the more random the sequence.
 
 # Set the start time to begin on the next step after the last note ends.
@@ -55,7 +58,7 @@ print("Value of num_steps:", num_steps)
 
 # Ask the model to continue the sequence.
 sequence = melody_rnn.generate(input_sequence, generator_options)
-'''
+
 # note_seq.play_sequence(sequence, synth=note_seq.synthesize)
 # note_seq.sequence_proto_to_midi_file(sequence, './output/like_a_sweet_home.mid')
 
@@ -64,3 +67,5 @@ print("Number of notes in input sequence:", len(sweet_home_alabama.notes))
 
 note_seq.play_sequence(sweet_home_alabama, synth=note_seq.synthesize)
 note_seq.sequence_proto_to_midi_file(sweet_home_alabama, './google_magenta/output/like_a_sweet_home.mid')
+'''
+'''
