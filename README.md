@@ -1,8 +1,6 @@
 # ai-generated-music
 
 
-
-
 ## Setting up the project
 
 

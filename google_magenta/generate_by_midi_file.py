@@ -9,11 +9,12 @@ midi_file = note_seq.midi_file_to_sequence_proto('./google_magenta/midi_input/sw
 
 # Add the notes from the MIDI file to the NoteSequence
 sweet_home_alabama = music_pb2.NoteSequence()
-for note in midi_file.notes[1400:1500]:
+for note in midi_file.notes:
     sweet_home_alabama.notes.add(pitch=note.pitch, start_time=note.start_time, end_time=note.end_time, velocity=note.velocity)
 
 # Set the total time of the sequence
 sweet_home_alabama.total_time = max(note.end_time for note in sweet_home_alabama.notes)
+print(sweet_home_alabama.total_time)
 
 # Add a tempo to the sequence
 sweet_home_alabama.tempos.add(qpm=midi_file.tempos[0].qpm)
