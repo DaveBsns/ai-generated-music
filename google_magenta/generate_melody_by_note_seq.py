@@ -27,22 +27,24 @@ def parse_midi_notes(response_text):
 
 api_key = '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'
 openai.api_key = api_key
+model_id = 'gpt-3.5-turbo'
 
 
 description = input("Enter the music piece description: ")
 gptprompt = f"Generate MIDI notes for a {description}.\n\nPlease provide the notes in the following structure:\n\nnew_note_starting_here_indicator,pitch,start_time,end_time,velocity\n\nFor example:\n\nn,62,0.0,0.5,80\nn,60,0.5,1.0,80\n"
 
+conversation = []
+conversation.append({'role': 'system', 'content': 'I create great music just from a text description! Do you have any requests?'})
+conversation.append({'role': 'user', 'content': gptprompt})
+
 response = openai.ChatCompletion.create(
-    engine="gpt-3.5-turbo",
-    prompt=gptprompt,
-    max_tokens=750,  # Adjust the value as per your needs
-    n = 1,  # Set the number of responses you want
-    stop=None,  # Specify an optional stopping condition
+    model=model_id,
+    messages=conversation
 )
 
-print(response.choices[0].text)
+print(response.choices[0].message.content)
 
-parsed_notes = parse_midi_notes(response.choices[0].text)
+parsed_notes = parse_midi_notes(response.choices[0].message.content)
 
 chatGPTSong = music_pb2.NoteSequence()
 
