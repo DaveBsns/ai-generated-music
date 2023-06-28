@@ -25,13 +25,14 @@ def parse_midi_notes(response_text):
     
     return notes
 
-api_key = ''
+api_key = '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'
 openai.api_key = api_key
 model_id = 'gpt-3.5-turbo'
 
 
 description = input("Enter the music piece description: ")
-gptprompt = f"Generate MIDI notes for a {description}.\n\nPlease provide the notes in the following structure:\n\nnew_note_starting_here_indicator,pitch,start_time,end_time,velocity\n\nFor example:\n\nn,62,0.0,0.5,80\nn,60,0.5,1.0,80\n"
+gptprompt = f"Can you think of note patterns that would play in a typical \"{description}\" including different instruments? It should be elaborate and long. Can you then please turn these notes into midi notes like in the following structure:\n\nnew_note_starting_here_indicator,pitch,start_time,end_time,velocity\n\nFor example:\n\nn,62,0.0,0.5,80\nn,60,0.5,1.0,80\n"
+#gptprompt = f"Generate MIDI notes for a {description}.\n\nMake it an arrangement with multiple instruments and include at least 30 notes. Please provide the notes in the following structure:\n\nnew_note_starting_here_indicator,pitch,start_time,end_time,velocity\n\nFor example:\n\nn,62,0.0,0.5,80\nn,60,0.5,1.0,80\n"
 
 conversation = []
 conversation.append({'role': 'system', 'content': 'I create great music just from a text description! Do you have any requests?'})
@@ -73,7 +74,7 @@ chatGPTSong.tempos.add(qpm=60)
 
 # Initialize the model.
 print("Initializing Melody RNN...")
-bundle = sequence_generator_bundle.read_bundle_file('./google_magenta/melody_rnn_bundles/attention_rnn.mag')
+bundle = sequence_generator_bundle.read_bundle_file('melody_rnn_bundles/attention_rnn.mag')
 generator_map = melody_rnn_sequence_generator.get_generator_map()
 melody_rnn = generator_map['attention_rnn'](checkpoint=None, bundle=bundle)
 melody_rnn.initialize()
@@ -81,20 +82,20 @@ melody_rnn.initialize()
 print('🎉 Done!')
 
 input_sequence = chatGPTSong # change this to teapot if you want
-num_steps = 128 # change this for shorter or longer sequences
-temperature = 0.5 # the higher the temperature the more random the sequence.
+num_steps = 100000 # change this for shorter or longer sequences
+temperature = .8 # the higher the temperature the more random the sequence.
 
 # Set the start time to begin on the next step after the last note ends.
 last_end_time = (max(n.end_time for n in input_sequence.notes)
                   if input_sequence.notes else 0)
 qpm = input_sequence.tempos[0].qpm 
-seconds_per_step = 60.0 / qpm / melody_rnn.steps_per_quarter
+seconds_per_step = .1 / qpm / melody_rnn.steps_per_quarter
 total_seconds = num_steps * seconds_per_step
 
 generator_options = generator_pb2.GeneratorOptions()
 generator_options.args['temperature'].float_value = temperature
 generate_section = generator_options.generate_sections.add(
-  start_time=last_end_time + seconds_per_step,
+  start_time=last_end_time,
   end_time=total_seconds)
 
 # Ask the model to continue the sequence.
@@ -102,4 +103,4 @@ sequence = melody_rnn.generate(input_sequence, generator_options)
 
 
 note_seq.play_sequence(sequence, synth=note_seq.synthesize)
-note_seq.sequence_proto_to_midi_file(sequence, './google_magenta/output/guitar_sample_output.midi')
+note_seq.sequence_proto_to_midi_file(sequence, 'output/guitar_sample_output.midi')
