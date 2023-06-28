@@ -4,47 +4,85 @@ from magenta.models.melody_rnn import melody_rnn_sequence_generator
 from magenta.models.shared import sequence_generator_bundle
 from note_seq.protobuf import generator_pb2
 from note_seq.protobuf import music_pb2
+import openai
+
+def parse_midi_notes(response_text):
+    lines = response_text.strip().split("\n")
+    notes = []
+    
+    for line in lines:
+        note_data = line.strip().split(",")
+        
+        if len(note_data) == 5:
+            note = {
+                "pitch": int(note_data[1].strip()),
+                "start_time": float(note_data[2].strip()),
+                "end_time": float(note_data[3].strip()),
+                "velocity": int(note_data[4].strip())
+            }
+            
+            notes.append(note)
+    
+    return notes
+
+api_key = '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'
+openai.api_key = api_key
+model_id = 'gpt-3.5-turbo'
 
 
-drums = music_pb2.NoteSequence()
+description = input("Enter the music piece description: ")
+gptprompt = f"Generate MIDI notes for a {description}.\n\nPlease provide the notes in the following structure:\n\nnew_note_starting_here_indicator,pitch,start_time,end_time,velocity\n\nFor example:\n\nn,62,0.0,0.5,80\nn,60,0.5,1.0,80\n"
+
+conversation = []
+conversation.append({'role': 'system', 'content': 'I create great music just from a text description! Do you have any requests?'})
+conversation.append({'role': 'user', 'content': gptprompt})
+
+response = openai.ChatCompletion.create(
+    model=model_id,
+    messages=conversation
+)
+
+print(response.choices[0].message.content)
+
+parsed_notes = parse_midi_notes(response.choices[0].message.content)
+
+chatGPTSong = music_pb2.NoteSequence()
+
+for note in parsed_notes:
+    chatGPTSong.notes.add(
+        pitch=note["pitch"],
+        start_time=note["start_time"],
+        end_time=note["end_time"],
+        velocity=note["velocity"]
+    )
+
+for note in parsed_notes:
+    pitch = note["pitch"]
+    start_time = note["start_time"]
+    end_time = note["end_time"]
+    velocity = note["velocity"]
+    
+    note_info = f"Pitch: {pitch}, Start Time: {start_time}, End Time: {end_time}, Velocity: {velocity}"
+    print(note_info)
 
 
-drums.notes.add(pitch=36, start_time=0, end_time=0.125, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=38, start_time=0, end_time=0.125, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=42, start_time=0, end_time=0.125, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=46, start_time=0, end_time=0.125, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=42, start_time=0.25, end_time=0.375, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=42, start_time=0.375, end_time=0.5, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=42, start_time=0.5, end_time=0.625, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=50, start_time=0.5, end_time=0.625, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=36, start_time=0.75, end_time=0.875, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=38, start_time=0.75, end_time=0.875, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=42, start_time=0.75, end_time=0.875, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=45, start_time=0.75, end_time=0.875, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=36, start_time=1, end_time=1.125, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=42, start_time=1, end_time=1.125, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=46, start_time=1, end_time=1.125, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=42, start_time=1.25, end_time=1.375, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=48, start_time=1.25, end_time=1.375, is_drum=True, instrument=10, velocity=80)
-drums.notes.add(pitch=50, start_time=1.25, end_time=1.375, is_drum=True, instrument=10, velocity=80)
-
-
-drums.tempos.add(qpm=60)
-
+# Find the highest end_time value
+highest_end_time = max(note["end_time"] for note in parsed_notes)
+chatGPTSong.total_time = highest_end_time
+chatGPTSong.tempos.add(qpm=60)
 
 # Initialize the model.
 print("Initializing Melody RNN...")
-bundle = sequence_generator_bundle.read_bundle_file('./google_magenta/melody_rnn_bundles/basic_rnn.mag')
+bundle = sequence_generator_bundle.read_bundle_file('melody_rnn_bundles/attention_rnn.mag')
 generator_map = melody_rnn_sequence_generator.get_generator_map()
 melody_rnn = generator_map['basic_rnn'](checkpoint=None, bundle=bundle)
 melody_rnn.initialize()
 
 print('🎉 Done!')
 
-
-input_sequence = drums # change this to teapot if you want
+input_sequence = chatGPTSong # change this to teapot if you want
 num_steps = 128 # change this for shorter or longer sequences
-temperature = 1.0 # the higher the temperature the more random the sequence.
+temperature = 0.5 # the higher the temperature the more random the sequence.
 
 # Set the start time to begin on the next step after the last note ends.
 last_end_time = (max(n.end_time for n in input_sequence.notes)
@@ -64,4 +102,4 @@ sequence = melody_rnn.generate(input_sequence, generator_options)
 
 
 note_seq.play_sequence(sequence, synth=note_seq.synthesize)
-note_seq.sequence_proto_to_midi_file(sequence, './google_magenta/output/drums_sample_output.mid')
+note_seq.sequence_proto_to_midi_file(sequence, 'output/guitar_sample_output.midi')
