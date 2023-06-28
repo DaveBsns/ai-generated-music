@@ -1,4 +1,5 @@
 import openai
+import io
 
 #class for lyrics generation using chatGPT
 class lyrics_generator:
@@ -14,3 +15,11 @@ class lyrics_generator:
             temperature=0,
         )
         return response.choices[0].message["content"]
+    
+    def removeCaptions(text):
+        stopWords = ['Verse', 'Chorus', 'Bridge', 'Outro']
+        response = ""
+        for line in io.StringIO(text):
+            if not any(word in line for word in stopWords):
+                response = response + line
+        return response
