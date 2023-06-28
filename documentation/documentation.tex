@@ -1,0 +1,132 @@
+\usepackage[utf8x]{inputenc} % encoding options, use utf8x for best compatibility
+\usepackage{hyperref} % makes hyperlinking from toc, listof.., references etc. available
+% Doc: ftp://tug.ctan.org/pub/tex-archive/.....ntrib/oberdiek/hypcap.pdf
+% links to image directly, not to description
+\usepackage{graphicx} % makes images available
+
+
+%The document
+\begin{document} 
+
+%Title Page:
+\begin{center}
+    \LARGE{\textbf{Assessing Pretrained Models for AI Generated Music: A Focus on the Development of Coherent Lyrics}}\\[1.5ex]
+\end{center}
+
+\newpage 
+
+%Abstract
+\label{abstract}
+%Content of the abstract
+
+\chapter{introduction}
+\label{chap:introduction}
+
+In recent years, the field of AI-generated music has witnessed remarkable advancements, with algorithms and models capable of composing melodies and harmonies that captivate listeners [1]. However, one notable aspect that often lags behind in these AI-generated musical compositions is the presence of coherent lyrics [2]. While AI-generated music without lyrics is abundant, the quality of lyrics produced by AI models is often subpar, lacking the depth, meaning, and coherence that human-created lyrics possess. This limitation poses a challenge in creating fully immersive and emotionally engaging AI-generated music experiences.
+One prominent observation is the scarcity of AI-generated music with accompanying lyrics. When attempts are made to generate lyrics using AI, the results are often perceived as "bad" or nonsensical, failing to resonate with the intended message or convey a coherent story. The intricacies of human language, poetic expression, and the nuances of lyrical storytelling pose significant challenges for AI models to replicate successfully. 
+Furthermore, while there exist models capable of generating speech or text, the specific domain of generating singing voices remains relatively unexplored. The complex dynamics, emotions, and intonations associated with singing present a unique set of challenges for AI systems.
+The objective of this research project is to explore the possibilities of generating music with AI and accompanying coherent lyrics. However, due to the time constraints inherent in this project, training a new AI model from scratch is not feasible. Therefore, we focus on leveraging existing pretrained models to assess their capabilities in generating coherent lyrics for AI-generated music compositions. 
+By examining the limitations and possibilities surrounding pretrained models in generating lyrics, we aim to shed light on the current state-of-the-art, identify challenges, and propose potential avenues for improvement. Through this research, we hope to contribute to the broader understanding of AI-generated music with coherent lyrics and pave the way for future advancements in this exciting field.
+
+TODO Adding references
+
+
+\chapter{State of the art}
+\label{chap:state_of_the_art}
+
+\section{MusikLM}
+\label{sec:MusikLM}
+
+Today there are several models that are able to perform music generation with more or less success. MusicLM from Google is one of them. MusicLM is a model that combines autoregressive music generation with text conditioning. It extends the capabilities of AudioLM by incorporating text and other conditioning signals. The model uses MuLan, a joint music-text model, to project music and text descriptions into a shared embedding space. This allows training on audio-only data without the need for captions.
+The method employs three models for extracting audio representations: SoundStream, w2v-BERT, and MuLan. SoundStream provides high-fidelity acoustic tokens, while w2v-BERT offers semantic tokens for coherent generation. MuLan operates on 10-second audio inputs, generating MuLan audio tokens for conditioning. During training, MuLan embeddings from audio are used, while during inference, MuLan text embeddings from the input text prompt are used.
+To model the audio representations hierarchically, MusicLM employs a sequence-to-sequence task with separate autoregressive decoders. The first stage focuses on semantic modeling, mapping MuLan audio tokens to semantic tokens. The second stage, acoustic modeling, predicts acoustic tokens based on both MuLan audio and semantic tokens.
+In the experimental setup, MusicLM utilizes Transformers for the semantic and acoustic modeling stages, with 430M parameters per stage. Training is performed on audio data, and SoundStream and w2v-BERT are trained on the Free Music Archive dataset. Tokenizer and autoregressive models are trained on a dataset containing 5 million audio clips.
+Evaluation is conducted using metrics such as Fréchet Audio Distance (FAD), KL Divergence (KLD), and MuLan Cycle Consistency (MCC). FAD measures audio quality, while KLD compares the generated music with reference captions. MCC calculates the cosine similarity between MuLan embeddings of text descriptions and generated music. Qualitative evaluation involves human rating tasks and studying training data memorization.
+The results of MusicLM show that semantic tokens enhance adherence to the text description. The model can generate diverse samples even with fixed tokens. MusicLM is also extended to support melody conditioning and long generation/story mode, allowing for music generation based on text descriptions and melodies, as well as generating longer sequences and smooth transitions.
+However, MusicLM has some limitations, such as difficulties in understanding negations and precise temporal ordering. The generated samples may reflect biases present in the training data, raising concerns about cultural appropriateness and representation. Furthermore, MusicLM is not able to produce singing voices and Google does not provide the model to experiment with it. And because of these points we decided to not use MusicLM in our pipeline.
+
+https://google-research.github.io/seanet/musiclm/examples/
+https://doi.org/10.48550/arXiv.2301.11325
+
+
+\section{Jukebox}
+\label{sec:Jukebox}
+
+TODO: Add information
+
+\section{Magenta}
+\label{sec:Magenta}
+
+TODO: Add information
+
+\section{Tacatron2 and WaveGlow}
+\label{sec:Tacatron2_and_WaveGlow}
+
+TODO: Add information
+
+
+\chapter{Method}
+\label{chap:method}
+
+After learning about the state of the art, we decided to build a pipeline that would produce a song. As input for the model, the context of the desired song should be described in writing. As output we hope for a MEDI file, which contains the appropriate music together with a suitable sung lyrics. The pipeline can be divided into 3 main steps, whereby step 2 and 3 can also be connected:
+
+\begin{itemize}
+    
+    \item generation of the lyrics
+    \item generation of a singing voice that sings the lyrics
+    \item generation of suitable music to the sung lyrics
+
+\end{itemize}
+
+\section{Generation of the lyrics}
+\label{sec:generation_of_the_lyrics}
+
+To generate the lyrics, we decided to use the pretrained model ChatGPT. ChatGPT is a large language model that is very good at generating context-based lyrics. It also has a very user-friendly API, which can be used for a certain number of times due to the free tier of OpenAI. Because of these reasons we decided to use ChatGPT for generating lyrics according to a certain context.
+
+\section{Generation of a singing voice}
+\label{sec:generation_of_a_singing_voice}
+
+TODO: Add information
+
+\section{Generation of suitable music to the lyrics}
+\label{sec:generation_of_suitable_music_to_the_lyrics}
+
+TODO: Add information
+
+\chapter{Results}
+\label{chap:results}
+
+To evaluate the pipeline, we first evaluate the individual components used. Finally, we will evaluate how the components worked together and compare the output with other songs.
+
+\section{ChatGPT}
+\label{sec:ChatGPT}
+
+ChatGPT, the language model used in the pipeline, has proven to be effective and easy to work with. The API integration was seamless and straightforward, allowing for smooth implementation. However, ChatGPT outputs lyrics with headers indicating verses and choruses, which required additional processing to extract only the lyrics themselves, removing the headers. Overall, ChatGPT successfully generates lyrics based on the provided content and is a valuable component of the music generation pipeline.
+
+\section{Tacatron2 and WaveGlow}
+\label{sec:Tacatron2_and_WaveGlow_results}
+
+TODO: Add information
+
+\section{Magenta}
+\label{sec:Magenta_results}
+
+TODO: Add information
+
+\chapter{Extensions/Limitations}
+\label{chap:Extensions_and_limitations}
+
+TODO: Add information
+
+\chapter{Conclusion}
+\label{chap:Conclusion}
+
+TODO: Add information
+
+
+%references
+\nocite{*} % lists all references from references.bib-file, even if they are not cited
+\bibliography{references}
+\label{chap:bibliography}
+
+\end{document}
