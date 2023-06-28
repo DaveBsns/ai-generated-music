@@ -5,7 +5,7 @@ from magenta.models.shared import sequence_generator_bundle
 from note_seq.protobuf import generator_pb2
 from note_seq.protobuf import music_pb2
 # Load the MIDI file
-midi_file = note_seq.midi_file_to_sequence_proto('./midi_input/sweet_home_alabama.mid')
+midi_file = note_seq.midi_file_to_sequence_proto('./google_magenta/midi_input/sweet_home_alabama.mid')
 
 # Add the notes from the MIDI file to the NoteSequence
 sweet_home_alabama = music_pb2.NoteSequence()
@@ -62,4 +62,4 @@ print("Number of notes in input sequence:", len(sweet_home_alabama.notes))
 
 
 note_seq.play_sequence(sweet_home_alabama, synth=note_seq.synthesize)
-note_seq.sequence_proto_to_midi_file(sweet_home_alabama, './output/like_a_sweet_home.mid')
+note_seq.sequence_proto_to_midi_file(sweet_home_alabama, './google_magenta/output/like_a_sweet_home.mid')
