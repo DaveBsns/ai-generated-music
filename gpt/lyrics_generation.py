@@ -17,7 +17,7 @@ class lyrics_generator:
         return response.choices[0].message["content"]
     
     def removeCaptions(text):
-        stopWords = ['Verse', 'Chorus', 'Bridge']
+        stopWords = ['Verse', 'Chorus', 'Bridge', 'Outro']
         response = ""
         for line in io.StringIO(text):
             if not any(word in line for word in stopWords):
