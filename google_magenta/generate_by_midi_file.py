@@ -5,14 +5,12 @@ from magenta.models.shared import sequence_generator_bundle
 from note_seq.protobuf import generator_pb2
 from note_seq.protobuf import music_pb2
 # Load the MIDI file
-midi_file = note_seq.midi_file_to_sequence_proto('./google_magenta/midi_input/sweet_home_alabama.mid')
-midi_file2 = note_seq.midi_file_to_sequence_proto('./google_magenta/midi_input/hes_a_pirate.mid')
+# midi_file = note_seq.midi_file_to_sequence_proto('./google_magenta/midi_input/sweet_home_alabama.mid')
+midi_file = note_seq.midi_file_to_sequence_proto('./google_magenta/midi_input/hes_a_pirate.mid')
 # Add the notes from the MIDI file to the NoteSequence
 sweet_home_alabama = music_pb2.NoteSequence()
 for note in midi_file.notes:
-    for note2 in midi_file2.notes:
-      sweet_home_alabama.notes.add(pitch=note.pitch, start_time=note.start_time, end_time=note.end_time, velocity=note.velocity)
-      sweet_home_alabama.notes.add(pitch=note2.pitch, start_time=note2.start_time, end_time=note2.end_time, velocity=note2.velocity)
+  sweet_home_alabama.notes.add(pitch=note.pitch, start_time=note.start_time, end_time=note.end_time, velocity=note.velocity)
 
 # Set the total time of the sequence
 sweet_home_alabama.total_time = max(note.end_time for note in sweet_home_alabama.notes)
@@ -33,7 +31,7 @@ print('🎉 Done!')
 
 input_sequence = sweet_home_alabama
 num_steps = 48000 # change this for shorter or longer sequences
-temperature = 1.0 # the higher the temperature the more random the sequence.
+temperature = 100.0 # the higher the temperature the more random the sequence.
 
 # Set the start time to begin on the next step after the last note ends.
 last_end_time = (max(n.end_time for n in input_sequence.notes)
